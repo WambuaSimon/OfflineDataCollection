@@ -9,7 +9,6 @@ import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -18,10 +17,6 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.zxing.BarcodeFormat;
-import com.google.zxing.MultiFormatWriter;
-import com.google.zxing.WriterException;
-import com.google.zxing.common.BitMatrix;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
 import com.simon.datacollection.R;
@@ -67,14 +62,15 @@ public class MainActivity extends AppCompatActivity implements DatabaseCallback 
     @BindView(R.id.submit)
     Button submit;
 
-    String fName, lName, idNo, qrCode;
+
+
     GPSLocation gps;
     double latitude, longitude;
 
     public static final int RequestPermissionCode = 1;
 
     Intent intent;
-    String coordinates;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -84,17 +80,14 @@ public class MainActivity extends AppCompatActivity implements DatabaseCallback 
         ButterKnife.bind(this);
         EnableRuntimePermission();
 
-        fName = firstname.getText().toString();
-        lName = lastname.getText().toString();
-        idNo = id_no.getText().toString();
-        qrCode = qr_code.getText().toString();
+
 
         /*getting coordinates*/
         gps = new GPSLocation(this);
         if (gps.canGetLocation()) {
             latitude = gps.getLatitude();
             longitude = gps.getLongitude();
-            coordinates = latitude + "," + longitude;
+
 
 
         } else {
@@ -115,6 +108,12 @@ public class MainActivity extends AppCompatActivity implements DatabaseCallback 
             public void onClick(View view) {
                 addCustomerData(view);
 
+            }
+        });
+        view_records.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(getApplicationContext(), Activity_CustomerList.class));
             }
         });
 
@@ -167,11 +166,11 @@ public class MainActivity extends AppCompatActivity implements DatabaseCallback 
 
                 if (PResult.length > 0 && PResult[0] == PackageManager.PERMISSION_GRANTED) {
 
-                    Toast.makeText(MainActivity.this, "Permission Granted, Now your application can access CAMERA.", Toast.LENGTH_LONG).show();
+//                    Toast.makeText(MainActivity.this, "Permission Granted, Now your application can access CAMERA.", Toast.LENGTH_SHORT).show();
 
                 } else {
 
-                    Toast.makeText(MainActivity.this, "Permission Canceled, Now your application cannot access CAMERA.", Toast.LENGTH_LONG).show();
+                    Toast.makeText(MainActivity.this, "Permission Canceled, Now your application cannot access CAMERA.", Toast.LENGTH_SHORT).show();
 
                 }
                 break;
@@ -190,7 +189,7 @@ public class MainActivity extends AppCompatActivity implements DatabaseCallback 
                 Log.e("Scan", "Scanned");
 
                 qr_code.setText(result.getContents());
-                Toast.makeText(this, "Scanned: " + result.getContents(), Toast.LENGTH_LONG).show();
+//                Toast.makeText(this, "Scanned: " + result.getContents(), Toast.LENGTH_LONG).show();
             }
         } else if (requestCode == 7 && resultCode == RESULT_OK) {
 
@@ -206,22 +205,43 @@ public class MainActivity extends AppCompatActivity implements DatabaseCallback 
 
     public void addCustomerData(View view) {
         /*validating fields*/
-        if (!TextUtils.isEmpty(fName) && !TextUtils.isEmpty(lName) && !TextUtils.isEmpty(idNo) && !TextUtils.isEmpty(qrCode) && id_image.getDrawable() == null) {
-            /*convert image to byte[]*/
-
+//        if (!TextUtils.isEmpty(fName) && !TextUtils.isEmpty(lName) && !TextUtils.isEmpty(idNo) && !TextUtils.isEmpty(qrCode) && id_image.getDrawable() == null) {
+        /*convert image to byte[]*/
+        if (firstname.getText().toString().isEmpty()) {
+            firstname.setError("Enter First Name to proceed");
+        } else if (lastname.getText().toString().isEmpty()) {
+            lastname.setError("Enter Last Name to proceed");
+        } else if (id_no.getText().toString().isEmpty()) {
+            id_no.setError("ID No. should not be empty");
+        } else if (qr_code.getText().toString().isEmpty()) {
+            qr_code.setError("Scan QR Code to proceed");
+        } else {
             Bitmap bitmap = ((BitmapDrawable) id_image.getDrawable()).getBitmap();
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
             byte[] imageInByte = baos.toByteArray();
 
-            LocalCacheManager.getInstance(this).addUser(this, fName, lName, idNo, qrCode, imageInByte, coordinates);
+            LocalCacheManager.getInstance(this).addUser(this,
+                    firstname.getText().toString(),
+                    lastname.getText().toString(),
+                    id_no.getText().toString(),
+                    qr_code.getText().toString(),
+                    imageInByte,
+                    String.valueOf(latitude),
+                    String.valueOf(longitude)
+
+
+            );
             firstname.setText("");
             lastname.setText("");
             id_no.setText("");
             qr_code.setText("");
             id_image.setImageResource(0);
         }
+
+
     }
+//    }
 
 
     @Override
@@ -238,5 +258,8 @@ public class MainActivity extends AppCompatActivity implements DatabaseCallback 
     public void onDataNotAvailable() {
 
     }
+
+
+
 }
 

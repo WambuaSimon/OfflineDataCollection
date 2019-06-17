@@ -43,11 +43,11 @@ public class LocalCacheManager {
         });
     }
 
-    public void addUser(final DatabaseCallback databaseCallback, final String firstName, final String lastName, final String idNo, final String qrData, final byte[] id_image, final String coordinates) {
+    public void addUser(final DatabaseCallback databaseCallback, final String firstName, final String lastName, final String idNo, final String qrData, final byte[] id_image, final String latitide,final String longitude) {
         Completable.fromAction(new Action() {
             @Override
             public void run() throws Exception {
-                CustomerModel user = new CustomerModel(firstName, lastName, idNo, qrData, id_image, coordinates);
+                CustomerModel user = new CustomerModel(firstName, lastName, idNo, qrData, id_image, latitide,longitude);
                 db.customerDao().insertAll(user);
             }
         }).observeOn(AndroidSchedulers.mainThread())
